@@ -115,6 +115,7 @@ export default function Index() {
       <div style={{ background: "#0d2d6b", color: "white", textAlign: "center", padding: "25px", marginTop: "40px" }}>
         <div style={{ fontWeight: "bold", fontSize: "18px", marginBottom: "5px" }}>PFFP</div>
         <div style={{ color: "rgba(255,255,255,0.6)", fontSize: "13px" }}>Путеводитель в мир высшего образования России</div>
+        <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px", marginTop: "8px" }}>Создано Владимировым Денисом</div>
       </div>
     </div>
   )
