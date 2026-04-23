@@ -4,34 +4,43 @@
 
 @layer base {
   :root {
+    /* PFFP theme - white/blue/green gradient */
+    --background: 210 60% 97%;
+    --foreground: 215 60% 15%;
+    --pffp-bg: linear-gradient(
+      135deg,
+      #f0f7ff 0%,
+      #e8f4ff 30%,
+      #f0fff8 65%,
+      #e6f9f0 100%
+    );
+
     /* Dark theme by default - matching origin */
-    --background: 0 0% 7%;
-    --foreground: 0 0% 96%;
 
-    --card: 0 0% 9%;
-    --card-foreground: 0 0% 96%;
+    --card: 210 60% 99%;
+    --card-foreground: 215 60% 15%;
 
-    --popover: 0 0% 9%;
-    --popover-foreground: 0 0% 96%;
+    --popover: 210 60% 99%;
+    --popover-foreground: 215 60% 15%;
 
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 96%;
+    --primary: 217 80% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 96%;
+    --secondary: 210 40% 94%;
+    --secondary-foreground: 215 60% 25%;
 
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 40%;
+    --muted: 210 40% 94%;
+    --muted-foreground: 210 30% 50%;
 
-    --accent: 35 82% 55%;
-    --accent-foreground: 0 0% 96%;
+    --accent: 155 65% 36%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 96%;
 
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
-    --ring: 217 91% 60%;
+    --border: 210 40% 88%;
+    --input: 210 40% 90%;
+    --ring: 217 80% 50%;
 
     --chart-1: 217 91% 60%;
     --chart-2: 35 82% 55%;

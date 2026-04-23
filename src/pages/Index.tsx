@@ -1,21 +1,16 @@
 import { Shader, ChromaFlow, Swirl } from "shaders/react"
 import { CustomCursor } from "@/components/custom-cursor"
 import { GrainOverlay } from "@/components/grain-overlay"
-import { WorkSection } from "@/components/sections/work-section"
-import { ServicesSection } from "@/components/sections/services-section"
-import { AboutSection } from "@/components/sections/about-section"
-import { ContactSection } from "@/components/sections/contact-section"
 import { MagneticButton } from "@/components/magnetic-button"
 import { useRef, useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { universities } from "@/data/universities"
+import Icon from "@/components/ui/icon"
 
 export default function Index() {
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const [currentSection, setCurrentSection] = useState(0)
-  const [isLoaded, setIsLoaded] = useState(false)
-  const touchStartY = useRef(0)
-  const touchStartX = useRef(0)
   const shaderContainerRef = useRef<HTMLDivElement>(null)
-  const scrollThrottleRef = useRef<number>()
+  const [isLoaded, setIsLoaded] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const checkShaderReady = () => {
@@ -28,286 +23,217 @@ export default function Index() {
       }
       return false
     }
-
     if (checkShaderReady()) return
-
-    const intervalId = setInterval(() => {
-      if (checkShaderReady()) {
-        clearInterval(intervalId)
-      }
-    }, 100)
-
-    const fallbackTimer = setTimeout(() => {
-      setIsLoaded(true)
-    }, 1500)
-
-    return () => {
-      clearInterval(intervalId)
-      clearTimeout(fallbackTimer)
-    }
+    const intervalId = setInterval(() => { if (checkShaderReady()) clearInterval(intervalId) }, 100)
+    const fallbackTimer = setTimeout(() => setIsLoaded(true), 1500)
+    return () => { clearInterval(intervalId); clearTimeout(fallbackTimer) }
   }, [])
 
-  const scrollToSection = (index: number) => {
-    if (scrollContainerRef.current) {
-      const sectionWidth = scrollContainerRef.current.offsetWidth
-      scrollContainerRef.current.scrollTo({
-        left: sectionWidth * index,
-        behavior: "smooth",
-      })
-      setCurrentSection(index)
-    }
-  }
-
-  useEffect(() => {
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartY.current = e.touches[0].clientY
-      touchStartX.current = e.touches[0].clientX
-    }
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (Math.abs(e.touches[0].clientY - touchStartY.current) > 10) {
-        e.preventDefault()
-      }
-    }
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      const touchEndY = e.changedTouches[0].clientY
-      const touchEndX = e.changedTouches[0].clientX
-      const deltaY = touchStartY.current - touchEndY
-      const deltaX = touchStartX.current - touchEndX
-
-      if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 50) {
-        if (deltaY > 0 && currentSection < 4) {
-          scrollToSection(currentSection + 1)
-        } else if (deltaY < 0 && currentSection > 0) {
-          scrollToSection(currentSection - 1)
-        }
-      }
-    }
-
-    const container = scrollContainerRef.current
-    if (container) {
-      container.addEventListener("touchstart", handleTouchStart, { passive: true })
-      container.addEventListener("touchmove", handleTouchMove, { passive: false })
-      container.addEventListener("touchend", handleTouchEnd, { passive: true })
-    }
-
-    return () => {
-      if (container) {
-        container.removeEventListener("touchstart", handleTouchStart)
-        container.removeEventListener("touchmove", handleTouchMove)
-        container.removeEventListener("touchend", handleTouchEnd)
-      }
-    }
-  }, [currentSection])
-
-  useEffect(() => {
-    const handleWheel = (e: WheelEvent) => {
-      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-        e.preventDefault()
-
-        if (!scrollContainerRef.current) return
-
-        scrollContainerRef.current.scrollBy({
-          left: e.deltaY,
-          behavior: "instant",
-        })
-
-        const sectionWidth = scrollContainerRef.current.offsetWidth
-        const newSection = Math.round(scrollContainerRef.current.scrollLeft / sectionWidth)
-        if (newSection !== currentSection) {
-          setCurrentSection(newSection)
-        }
-      }
-    }
-
-    const container = scrollContainerRef.current
-    if (container) {
-      container.addEventListener("wheel", handleWheel, { passive: false })
-    }
-
-    return () => {
-      if (container) {
-        container.removeEventListener("wheel", handleWheel)
-      }
-    }
-  }, [currentSection])
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (scrollThrottleRef.current) return
-
-      scrollThrottleRef.current = requestAnimationFrame(() => {
-        if (!scrollContainerRef.current) {
-          scrollThrottleRef.current = undefined
-          return
-        }
-
-        const sectionWidth = scrollContainerRef.current.offsetWidth
-        const scrollLeft = scrollContainerRef.current.scrollLeft
-        const newSection = Math.round(scrollLeft / sectionWidth)
-
-        if (newSection !== currentSection && newSection >= 0 && newSection <= 4) {
-          setCurrentSection(newSection)
-        }
-
-        scrollThrottleRef.current = undefined
-      })
-    }
-
-    const container = scrollContainerRef.current
-    if (container) {
-      container.addEventListener("scroll", handleScroll, { passive: true })
-    }
-
-    return () => {
-      if (container) {
-        container.removeEventListener("scroll", handleScroll)
-      }
-      if (scrollThrottleRef.current) {
-        cancelAnimationFrame(scrollThrottleRef.current)
-      }
-    }
-  }, [currentSection])
-
   return (
-    <main className="relative h-screen w-full overflow-hidden bg-background">
+    <main className="relative w-full" style={{ background: "var(--pffp-bg)" }}>
       <CustomCursor />
       <GrainOverlay />
 
+      {/* WebGL Hero */}
       <div
         ref={shaderContainerRef}
         className={`fixed inset-0 z-0 transition-opacity duration-700 ${isLoaded ? "opacity-100" : "opacity-0"}`}
-        style={{ contain: "strict" }}
+        style={{ contain: "strict", height: "100vh" }}
       >
         <Shader className="h-full w-full">
           <Swirl
-            colorA="#1275d8"
-            colorB="#e19136"
-            speed={0.8}
-            detail={0.8}
-            blend={50}
-            coarseX={40}
-            coarseY={40}
-            mediumX={40}
-            mediumY={40}
-            fineX={40}
-            fineY={40}
+            colorA="#1a73e8"
+            colorB="#0d9e6e"
+            speed={0.5}
+            detail={0.7}
+            blend={60}
+            coarseX={30}
+            coarseY={30}
+            mediumX={30}
+            mediumY={30}
+            fineX={30}
+            fineY={30}
           />
           <ChromaFlow
-            baseColor="#0066ff"
-            upColor="#0066ff"
-            downColor="#d1d1d1"
-            leftColor="#e19136"
-            rightColor="#e19136"
-            intensity={0.9}
-            radius={1.8}
-            momentum={25}
+            baseColor="#1a5fd4"
+            upColor="#0d9e6e"
+            downColor="#e8f4ff"
+            leftColor="#0d9e6e"
+            rightColor="#1a73e8"
+            intensity={0.85}
+            radius={1.6}
+            momentum={20}
             maskType="alpha"
-            opacity={0.97}
+            opacity={0.92}
           />
         </Shader>
-        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute inset-0 bg-white/10" />
       </div>
 
+      {/* Nav */}
       <nav
-        className={`fixed left-0 right-0 top-0 z-50 flex items-center justify-between px-6 py-6 transition-opacity duration-700 md:px-12 ${
-          isLoaded ? "opacity-100" : "opacity-0"
-        }`}
+        className={`fixed left-0 right-0 top-0 z-50 flex items-center justify-between px-6 py-5 transition-opacity duration-700 md:px-12 ${isLoaded ? "opacity-100" : "opacity-0"}`}
+        style={{ backdropFilter: "blur(12px)", background: "rgba(240,248,255,0.15)" }}
       >
-        <button
-          onClick={() => scrollToSection(0)}
-          className="flex items-center gap-2 transition-transform hover:scale-105"
-        >
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-foreground/15 backdrop-blur-md transition-all duration-300 hover:scale-110 hover:bg-foreground/25">
-            <span className="font-sans text-xl font-bold text-foreground">F</span>
+        <div className="flex items-center gap-2">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg"
+            style={{ background: "linear-gradient(135deg, #1a73e8, #0d9e6e)" }}>
+            <span className="font-sans text-xl font-bold text-white">P</span>
           </div>
-          <span className="font-sans text-xl font-semibold tracking-tight text-foreground">Flowrise</span>
-        </button>
-
-        <div className="hidden items-center gap-8 md:flex">
-          {["Главная", "Работы", "Услуги", "О нас", "Контакты"].map((item, index) => (
-            <button
-              key={item}
-              onClick={() => scrollToSection(index)}
-              className={`group relative font-sans text-sm font-medium transition-colors ${
-                currentSection === index ? "text-foreground" : "text-foreground/80 hover:text-foreground"
-              }`}
-            >
-              {item}
-              <span
-                className={`absolute -bottom-1 left-0 h-px bg-foreground transition-all duration-300 ${
-                  currentSection === index ? "w-full" : "w-0 group-hover:w-full"
-                }`}
-              />
-            </button>
-          ))}
+          <span className="font-sans text-xl font-bold text-white tracking-tight">PFFP</span>
         </div>
-
-        <MagneticButton variant="secondary" onClick={() => scrollToSection(4)}>
-          Начать
-        </MagneticButton>
+        <div className="font-mono text-xs text-white/70 hidden md:block">
+          Платформа для выбора вуза
+        </div>
+        <a href="#universities">
+          <MagneticButton variant="secondary">
+            Все вузы
+          </MagneticButton>
+        </a>
       </nav>
 
-      <div
-        ref={scrollContainerRef}
-        data-scroll-container
-        className={`relative z-10 flex h-screen overflow-x-auto overflow-y-hidden transition-opacity duration-700 ${
-          isLoaded ? "opacity-100" : "opacity-0"
-        }`}
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+      {/* Hero Section — 100vh */}
+      <section className="relative z-10 flex h-screen flex-col items-center justify-center px-6 text-center">
+        <div className={`transition-all duration-1000 ${isLoaded ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"}`}>
+          <div className="mb-4 inline-block rounded-full px-4 py-1.5 text-xs font-mono text-white/80"
+            style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)" }}>
+            Топ-10 лучших университетов России
+          </div>
+          <h1 className="mb-6 font-sans font-light leading-[1.1] tracking-tight text-white text-4xl md:text-6xl lg:text-7xl">
+            Помощь школьникам
+            <br />
+            <span className="font-semibold">в выборе</span>
+            <br />
+            <span style={{ color: "#a8d8b0" }}>будущего места обучения</span>
+          </h1>
+          <p className="mx-auto mb-10 max-w-xl text-base text-white/80 md:text-lg leading-relaxed">
+            Полная информация о лучших вузах страны — специальности, стоимость, проходные баллы и многое другое.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <a href="#universities">
+              <MagneticButton variant="primary" size="lg">
+                Выбрать вуз
+              </MagneticButton>
+            </a>
+          </div>
+        </div>
+
+        {/* Scroll hint */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/50">
+          <span className="font-mono text-xs">Прокрутите вниз</span>
+          <Icon name="ChevronDown" size={16} className="animate-bounce" />
+        </div>
+      </section>
+
+      {/* Universities Grid */}
+      <section
+        id="universities"
+        className="relative z-10 px-6 py-20 md:px-12 lg:px-16"
+        style={{ background: "var(--pffp-bg)" }}
       >
-        {/* Hero Section */}
-        <section className="flex min-h-screen w-screen shrink-0 flex-col justify-end px-6 pb-16 pt-24 md:px-12 md:pb-24">
-          <div className="max-w-3xl">
-            <div className="mb-4 inline-block animate-in fade-in slide-in-from-bottom-4 rounded-full border border-foreground/20 bg-foreground/15 px-4 py-1.5 backdrop-blur-md duration-700">
-              <p className="font-mono text-xs text-foreground/90">Современные технологии</p>
-            </div>
-            <h1 className="mb-6 animate-in fade-in slide-in-from-bottom-8 font-sans text-6xl font-light leading-[1.1] tracking-tight text-foreground duration-1000 md:text-7xl lg:text-8xl">
-              <span className="text-balance">
-                Цифровое будущее
-              </span>
-            </h1>
-            <p className="mb-8 max-w-xl animate-in fade-in slide-in-from-bottom-4 text-lg leading-relaxed text-foreground/90 duration-1000 delay-200 md:text-xl">
-              <span className="text-pretty">
-                Создаем современные веб-приложения и цифровые продукты, которые помогают бизнесу расти и развиваться.
-              </span>
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-12 text-center">
+            <h2 className="mb-3 font-sans text-4xl font-light md:text-5xl" style={{ color: "#0d2d6b" }}>
+              Топ-10 вузов России
+            </h2>
+            <p className="font-mono text-sm" style={{ color: "#4a6b8a" }}>
+              / Выберите университет чтобы узнать подробнее
             </p>
-            <div className="flex animate-in fade-in slide-in-from-bottom-4 flex-col gap-4 duration-1000 delay-300 sm:flex-row sm:items-center">
-              <MagneticButton
-                size="lg"
-                variant="primary"
-                onClick={() => scrollToSection(4)}
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {universities.map((uni, i) => (
+              <button
+                key={uni.id}
+                onClick={() => navigate(`/university/${uni.id}`)}
+                className="group text-left rounded-3xl overflow-hidden shadow-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+                style={{
+                  background: "rgba(255,255,255,0.8)",
+                  backdropFilter: "blur(12px)",
+                  border: "1px solid rgba(26,115,232,0.12)",
+                  animationDelay: `${i * 60}ms`,
+                }}
               >
-                Обсудить проект
-              </MagneticButton>
-              <MagneticButton size="lg" variant="secondary" onClick={() => scrollToSection(2)}>
-                Наши услуги
-              </MagneticButton>
-            </div>
+                {/* Color band */}
+                <div className="h-2 w-full" style={{ background: `linear-gradient(90deg, ${uni.color}, ${uni.color}88)` }} />
+
+                <div className="p-6">
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-white shadow-sm"
+                      style={{ background: `linear-gradient(135deg, ${uni.color}, ${uni.color}bb)` }}>
+                      <div className="text-center">
+                        <div className="text-[9px] font-mono opacity-80">ТОП</div>
+                        <div className="text-xl font-bold leading-none">{uni.rank}</div>
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-mono mb-1" style={{ color: "#4a6b8a" }}>{uni.city}</div>
+                      <h3 className="font-sans text-base font-medium leading-tight line-clamp-2"
+                        style={{ color: "#0d2d6b" }}>
+                        {uni.name}
+                      </h3>
+                    </div>
+                  </div>
+
+                  <div className="mb-4 inline-block rounded-full px-3 py-1 text-xs font-semibold"
+                    style={{ background: `${uni.color}12`, color: uni.color }}>
+                    {uni.shortName}
+                  </div>
+
+                  <p className="text-sm leading-relaxed line-clamp-3 mb-5" style={{ color: "#3d5a7a" }}>
+                    {uni.description}
+                  </p>
+
+                  {/* Mini stats */}
+                  <div className="grid grid-cols-3 gap-3 mb-5">
+                    <div className="rounded-xl p-2 text-center" style={{ background: `${uni.color}08` }}>
+                      <div className="text-xs font-mono" style={{ color: "#4a6b8a" }}>Студентов</div>
+                      <div className="text-sm font-semibold" style={{ color: "#0d2d6b" }}>
+                        {uni.students >= 10000
+                          ? `${Math.round(uni.students / 1000)}K`
+                          : uni.students.toLocaleString("ru-RU")}
+                      </div>
+                    </div>
+                    <div className="rounded-xl p-2 text-center" style={{ background: `${uni.color}08` }}>
+                      <div className="text-xs font-mono" style={{ color: "#4a6b8a" }}>Факультетов</div>
+                      <div className="text-sm font-semibold" style={{ color: "#0d2d6b" }}>{uni.faculties}</div>
+                    </div>
+                    <div className="rounded-xl p-2 text-center" style={{ background: `${uni.color}08` }}>
+                      <div className="text-xs font-mono" style={{ color: "#4a6b8a" }}>Основан</div>
+                      <div className="text-sm font-semibold" style={{ color: "#0d2d6b" }}>{uni.founded}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs" style={{ color: "#4a6b8a" }}>
+                      от {uni.programs[0]?.tuitionMin.toLocaleString("ru-RU")} ₽/год
+                    </div>
+                    <div className="flex items-center gap-1 text-xs font-medium transition-all group-hover:gap-2"
+                      style={{ color: "#1a73e8" }}>
+                      Подробнее
+                      <Icon name="ArrowRight" size={14} />
+                    </div>
+                  </div>
+                </div>
+              </button>
+            ))}
           </div>
+        </div>
+      </section>
 
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-in fade-in duration-1000 delay-500">
-            <div className="flex items-center gap-2">
-              <p className="font-mono text-xs text-foreground/80">Листайте вправо</p>
-              <div className="flex h-6 w-12 items-center justify-center rounded-full border border-foreground/20 bg-foreground/15 backdrop-blur-md">
-                <div className="h-2 w-2 animate-pulse rounded-full bg-foreground/80" />
-              </div>
-            </div>
+      {/* Footer */}
+      <footer className="relative z-10 py-10 px-6 text-center" style={{ background: "rgba(13,45,107,0.05)", borderTop: "1px solid rgba(26,115,232,0.1)" }}>
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg"
+            style={{ background: "linear-gradient(135deg, #1a73e8, #0d9e6e)" }}>
+            <span className="font-sans text-sm font-bold text-white">P</span>
           </div>
-        </section>
-
-        <WorkSection />
-        <ServicesSection />
-        <AboutSection scrollToSection={scrollToSection} />
-        <ContactSection />
-      </div>
-
-      <style>{`
-        div::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
+          <span className="font-sans text-lg font-bold" style={{ color: "#0d2d6b" }}>PFFP</span>
+        </div>
+        <p className="font-mono text-xs" style={{ color: "#6b8aaa" }}>
+          Путеводитель в мир высшего образования России
+        </p>
+      </footer>
     </main>
   )
 }
