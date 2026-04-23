@@ -74,14 +74,10 @@ export default function UniversityPage() {
         </div>
 
         {/* О вузе + адрес */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: "20px" }}>
+        <div style={{ marginBottom: "20px" }}>
           <div style={{ background: "white", border: "1px solid #ddd", borderRadius: "8px", padding: "20px" }}>
             <h2 style={{ color: "#222", fontSize: "18px", marginBottom: "12px" }}>О университете</h2>
             <p style={{ color: "#555", fontSize: "14px", lineHeight: "1.6" }}>{uni.description}</p>
-          </div>
-          <div style={{ background: "white", border: "1px solid #ddd", borderRadius: "8px", padding: "20px" }}>
-            <h2 style={{ color: "#222", fontSize: "18px", marginBottom: "12px" }}>Миссия</h2>
-            <p style={{ color: "#555", fontSize: "14px", lineHeight: "1.6" }}>{uni.mission}</p>
             <div style={{ marginTop: "15px", color: "#888", fontSize: "13px" }}>
               📍 {uni.address}
             </div>
